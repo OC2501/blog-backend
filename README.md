@@ -56,6 +56,17 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## Migrations the app
+
+```bash
+# generate migration
+$ npm run m:gen:dev -- ./src/migrations/"nombre de la migracion"
+
+# run migration
+$ npm run m:run:dev 
+
+```
+
 ## Test
 
 ```bash

@@ -67,10 +67,10 @@ constructor(
   async findOne(id: string) {
     try {
       const comment = await this.CommentRepository
-        .createQueryBuilder('product')
+        .createQueryBuilder('comment')
         .where({ id, isActive: true })
-        .leftJoinAndSelect('Comment.user', 'user')
-        .leftJoinAndSelect('Comment.post', 'post')
+        .leftJoinAndSelect('comment.post', 'post')
+        .leftJoinAndSelect('comment.user', 'user')
         .getOne();
       
       if (!comment) {

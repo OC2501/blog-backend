@@ -66,11 +66,11 @@ export class LikesService {
   async findOne(id: string) {
     try {
       const like = await this.LikeRepository
-        .createQueryBuilder('product')
+        .createQueryBuilder('like')
         .where({ id, isActive: true })
-        .leftJoinAndSelect('Like.category', 'category')
-        .leftJoinAndSelect('Like.tags', 'tags')
-        .leftJoinAndSelect('Like.comment_id', 'comment')
+        .leftJoinAndSelect('like.category', 'category')
+        .leftJoinAndSelect('like.tags', 'tags')
+        .leftJoinAndSelect('like.comment_id', 'comment')
         .getOne();
       
       if (!like) {

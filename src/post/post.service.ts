@@ -71,7 +71,7 @@ export class PostService {
   async findOne(id: string) {
     try {
       const post = await this.PostRepository
-        .createQueryBuilder('product')
+        .createQueryBuilder('post')
         .where({ id, isActive: true })
         .leftJoinAndSelect('post.category', 'category')
         .leftJoinAndSelect('post.tags', 'tags')

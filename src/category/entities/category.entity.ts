@@ -1,4 +1,4 @@
-import { Entity, Column,ManyToMany } from 'typeorm';
+import { Entity, Column,ManyToMany, JoinTable } from 'typeorm';
 import { BaseEntity } from '../../common/config/base.entity';
 import { PostEntity } from '../../post/entities/post.entity';
 
@@ -13,7 +13,14 @@ export class CategoryEntity extends BaseEntity {
     slug: string;
 
     @ManyToMany(()=> PostEntity, post => post.category,)
-    posts: PostEntity[];
+    @JoinTable(
+        {
+            name: 'post_category',
+            joinColumn: { name: 'category_id' },
+            inverseJoinColumn: { name: 'post_id' }
+        }
+    )
+    post: PostEntity[];
     
     
 }

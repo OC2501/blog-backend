@@ -39,10 +39,6 @@ export class CreatePostDto {
 
     @IsString()
     @IsNotEmpty()
-    commentId: string;
-
-    @IsString()
-    @IsNotEmpty()
     userId: string;
  
 

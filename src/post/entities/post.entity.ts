@@ -1,5 +1,5 @@
 
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
 import { BaseEntity } from '../../common/config/base.entity';
 import { CategoryEntity } from '../../category/entities/category.entity';
 import { TagEntity } from '../../tags/entities/tag.entity';
@@ -23,7 +23,7 @@ export class PostEntity extends BaseEntity {
   @Column({ type: 'enum', enum: Status, default: Status.PUBLISHED })
   status: Status;
 
-  @Column({ type: 'timestamp'})
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' , nullable: false })
   publishedAt: Date;
 
   @Column({ type: 'varchar', length: 255 })
@@ -32,24 +32,34 @@ export class PostEntity extends BaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   featuredimage: string;
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'int', default: 0 })
   viewcount: number;
 
-  @ManyToMany(()=> CategoryEntity, category => category.posts)
+  @ManyToMany(()=> CategoryEntity, category => category.post)
+   @JoinTable({
+    name: 'posts_categories', // nombre de la tabla intermedia
+    joinColumn: { name: 'postId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'categoryId', referencedColumnName: 'id' }
+  })
   category: CategoryEntity[];
 
-  @ManyToMany(() => TagEntity, tag => tag.posts)
+  @ManyToMany(() => TagEntity, tag => tag.post)
+  @JoinTable({
+    name: 'posts_tags', // nombre de la tabla intermedia
+    joinColumn: { name: 'postId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'tagId', referencedColumnName: 'id' }
+  })
   tags: TagEntity[];
 
   @OneToMany(() => CommentEntity, comment => comment.post, { cascade: true })
   comments: CommentEntity[];
+
+  @ManyToOne(() => UserEntity, user => user.post)
+  @JoinColumn({ name: 'userId' })
+  user: string; 
    
   @OneToMany(() => LikeEntity, like => like.post)
   likes: LikeEntity[];
-
-  @ManyToOne(() => UserEntity, user => user.posts)
-  @JoinColumn({ name: 'userId' })
-  user: string;
 
 }
 
