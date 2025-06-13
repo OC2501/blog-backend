@@ -47,9 +47,9 @@ export class UserEntity extends BaseEntity {
       linkedin: string;
 
       @OneToMany(() => PostEntity, (post) => post.user)
-      post: PostEntity[];
+      posts: PostEntity[];
 
-      @OneToMany(() => CommentEntity, (comment) => comment.user)
+      @OneToMany(() => CommentEntity, (comments) => comments.user)
       comments: CommentEntity[];
 
       @OneToMany(() => LikeEntity, (like) => like.user)

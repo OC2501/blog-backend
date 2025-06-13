@@ -6,17 +6,43 @@ import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CommentEntity } from './entities/comment.entity';
+import { UsersService } from 'src/users/users.service';
+import { PostService } from 'src/post/post.service';
 
 @Injectable()
 export class CommentService {
 constructor(
     @InjectRepository(CommentEntity)
     private readonly CommentRepository: Repository<CommentEntity>,
+    private readonly usersService: UsersService,
+    private readonly postService: PostService
   ) {}
 
   async create(createCommentDto: CreateCommentDto,) {
+    const {postId,userId, ...rest } = createCommentDto;
     try {
-      const comment = await this.CommentRepository.save(createCommentDto as Partial<CommentEntity>);
+
+      const user = await this.usersService.findOne(userId);
+      if(!user){
+        throw new ManagerError({
+          type: 'NOT_FOUND',
+          message: 'User not found!',
+        });
+      }
+
+      const posts = await this.postService.findOne(postId);
+      if(!posts){
+        throw new ManagerError({
+          type: 'NOT_FOUND',
+          message: 'Post not found!',
+        });
+      }
+
+      const comment = await this.CommentRepository.save({
+        ...rest,
+        user: user,
+        posts: posts,
+      });
 
       if (!comment) {
         throw new ManagerError({
@@ -27,6 +53,7 @@ constructor(
 
       return comment;
     } catch (error) {
+      if(error instanceof ManagerError) throw error;
       ManagerError.createSignatureError(error.message);
     }
   }
@@ -39,10 +66,10 @@ constructor(
       const [total, data] = await Promise.all([
         this.CommentRepository.count({ where: { isActive: true } }),
         this.CommentRepository
-          .createQueryBuilder('comment')
+          .createQueryBuilder('comments')
           .where({ isActive: true })
-          .leftJoinAndSelect('comment.post', 'post')
-          .leftJoinAndSelect('comment.user', 'user')
+          .leftJoinAndSelect('comments.posts', 'posts')
+          .leftJoinAndSelect('comments.user', 'user')
           .take(limit)
           .skip(skip)
           .getMany(),
@@ -67,10 +94,10 @@ constructor(
   async findOne(id: string) {
     try {
       const comment = await this.CommentRepository
-        .createQueryBuilder('comment')
+        .createQueryBuilder('comments')
         .where({ id, isActive: true })
-        .leftJoinAndSelect('comment.post', 'post')
-        .leftJoinAndSelect('comment.user', 'user')
+        .leftJoinAndSelect('comments.posts', 'posts')
+        .leftJoinAndSelect('comments.user', 'user')
         .getOne();
       
       if (!comment) {

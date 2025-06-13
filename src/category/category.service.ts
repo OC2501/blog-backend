@@ -82,7 +82,7 @@ export class CategoriesService {
       const category = await this.categoryRepository
         .createQueryBuilder('category')
         .where({ id, isActive: true })
-        .leftJoinAndSelect('category.post', 'post')
+        .leftJoinAndSelect('category.posts', 'posts')
         .getOne();
       if (!category) {
         throw new ManagerError({

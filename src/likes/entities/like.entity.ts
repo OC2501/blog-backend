@@ -6,11 +6,11 @@ import { UserEntity } from "../../users/entities/user.entity";
 
 @Entity("likes")
 export class LikeEntity extends BaseEntity {
-    @ManyToOne(() => PostEntity, (post) => post.likes)
+    @ManyToOne(() => PostEntity, (posts) => posts.likes)
     @JoinColumn({ name: "post_id" })
-    post: string;
+    posts: PostEntity;
     @ManyToOne(() => UserEntity, (user) => user.likes)
     @JoinColumn({ name: "user_id" })
-    user: string;
+    user: UserEntity;
 
 }

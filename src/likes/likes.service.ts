@@ -6,17 +6,44 @@ import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LikeEntity } from './entities/like.entity';
+import { PostService } from 'src/post/post.service';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class LikesService {
    constructor(
     @InjectRepository(LikeEntity)
     private readonly LikeRepository: Repository<LikeEntity>,
+    private readonly usersService: UsersService,
+    private readonly postService: PostService
   ) {}
 
   async create(createLikeDto: CreateLikeDto,) {
+
+    const {userId,postId,...rest}= createLikeDto;
+
     try {
-      const like = await this.LikeRepository.save(createLikeDto as Partial<LikeEntity>);
+      const user = await this.usersService.findOne(userId);
+      if(!user){
+        throw new ManagerError({
+          type: 'NOT_FOUND',
+          message: 'User not found!',
+        });
+      }
+
+      const posts = await this.postService.findOne(postId);
+      if(!posts){
+        throw new ManagerError({
+          type: 'NOT_FOUND',
+          message: 'Post not found!',
+        });
+      }
+
+      const like = await this.LikeRepository.save({
+        ...rest,
+        posts: posts,
+        user: user,
+      });
 
       if (!like) {
         throw new ManagerError({
@@ -27,7 +54,8 @@ export class LikesService {
 
       return like;
     } catch (error) {
-      ManagerError.createSignatureError(error.message);
+     if(error instanceof ManagerError) throw error;
+      throw ManagerError.createSignatureError(error.message);
     }
   }
 
@@ -39,9 +67,10 @@ export class LikesService {
       const [total, data] = await Promise.all([
         this.LikeRepository.count({ where: { isActive: true } }),
         this.LikeRepository
-          .createQueryBuilder('Like')
+          .createQueryBuilder('likes')
           .where({ isActive: true })
-          .leftJoinAndSelect('Like.post', 'post')
+          .leftJoinAndSelect('likes.user', 'user')
+          .leftJoinAndSelect('likes.posts', 'posts')
           .take(limit)
           .skip(skip)
           .getMany(),
@@ -66,11 +95,10 @@ export class LikesService {
   async findOne(id: string) {
     try {
       const like = await this.LikeRepository
-        .createQueryBuilder('like')
+        .createQueryBuilder('likes')
         .where({ id, isActive: true })
-        .leftJoinAndSelect('like.category', 'category')
-        .leftJoinAndSelect('like.tags', 'tags')
-        .leftJoinAndSelect('like.comment_id', 'comment')
+        .leftJoinAndSelect('likes.user', 'user')
+        .leftJoinAndSelect('likes.posts', 'posts')
         .getOne();
       
       if (!like) {
@@ -82,6 +110,7 @@ export class LikesService {
     
        return like;
     } catch (error) {
+      if(error instanceof ManagerError) throw error;
       ManagerError.createSignatureError(error.message);
     }
   }

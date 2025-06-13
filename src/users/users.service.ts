@@ -70,9 +70,9 @@ export class UsersService {
         const user = await this.UserRepository
           .createQueryBuilder('user')
           .where({ id, isActive: true })
-          .leftJoinAndSelect('user.post', 'post')
-          .leftJoinAndSelect('user.comment', 'comment')
-          .leftJoinAndSelect('user.like', 'like')
+          .leftJoinAndSelect('user.posts', 'posts')
+          .leftJoinAndSelect('user.comments', 'comments')
+          .leftJoinAndSelect('user.likes', 'likes')
           .getOne();
         
         if (!user) {

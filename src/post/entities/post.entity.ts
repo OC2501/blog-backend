@@ -35,30 +35,30 @@ export class PostEntity extends BaseEntity {
   @Column({ type: 'int', default: 0 })
   viewcount: number;
 
-  @ManyToMany(()=> CategoryEntity, category => category.post)
+  @ManyToMany(()=> CategoryEntity, category => category.posts)
    @JoinTable({
     name: 'posts_categories', // nombre de la tabla intermedia
-    joinColumn: { name: 'postId', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'categoryId', referencedColumnName: 'id' }
+    joinColumn: { name: 'post_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'category_id', referencedColumnName: 'id' }
   })
-  category: CategoryEntity[];
+  categories: CategoryEntity[];
 
   @ManyToMany(() => TagEntity, tag => tag.post)
   @JoinTable({
     name: 'posts_tags', // nombre de la tabla intermedia
-    joinColumn: { name: 'postId', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'tagId', referencedColumnName: 'id' }
+    joinColumn: { name: 'post_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'tag_id', referencedColumnName: 'id' }
   })
   tags: TagEntity[];
 
-  @OneToMany(() => CommentEntity, comment => comment.post, { cascade: true })
+  @OneToMany(() => CommentEntity, comments => comments.posts)
   comments: CommentEntity[];
 
-  @ManyToOne(() => UserEntity, user => user.post)
-  @JoinColumn({ name: 'userId' })
-  user: string; 
+  @ManyToOne(() => UserEntity, user => user.posts)
+  @JoinColumn({ name: 'user_id' })
+  user: UserEntity; 
    
-  @OneToMany(() => LikeEntity, like => like.post)
+  @OneToMany(() => LikeEntity, likes => likes.posts)
   likes: LikeEntity[];
 
 }

@@ -15,14 +15,16 @@ export class ManagerError extends Error {
     const name = message.split(' :: ')[0];
     const description = message.split(' :: ')[1];
 
+    const statusCode = HttpStatus[name] !== undefined ? HttpStatus[name] : HttpStatus.INTERNAL_SERVER_ERROR;
+
     if (name) {
       throw new HttpException(
         {
           error: name,
-          statusCode: HttpStatus[name],
+          statusCode: statusCode,
           message: description,
         },
-        HttpStatus[name],
+        statusCode,
         {
           cause: new Error(message),
         },

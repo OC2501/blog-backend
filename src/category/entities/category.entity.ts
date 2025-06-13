@@ -12,7 +12,7 @@ export class CategoryEntity extends BaseEntity {
     @Column({ type: 'varchar', length: 255, nullable: true })
     slug: string;
 
-    @ManyToMany(()=> PostEntity, post => post.category,)
+    @ManyToMany(()=> PostEntity, post => post.categories,)
     @JoinTable(
         {
             name: 'post_category',
@@ -20,7 +20,5 @@ export class CategoryEntity extends BaseEntity {
             inverseJoinColumn: { name: 'post_id' }
         }
     )
-    post: PostEntity[];
-    
-    
+    posts: PostEntity[];
 }

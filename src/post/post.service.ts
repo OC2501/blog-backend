@@ -6,6 +6,11 @@ import { Repository, UpdateResult } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PostEntity } from './entities/post.entity';
 import { ManagerError } from 'src/common/errors/manager.error';
+import { UsersService } from 'src/users/users.service';
+import { CategoriesService } from 'src/category/category.service';
+import { TagsService } from 'src/tags/tags.service';
+import { TagEntity } from 'src/tags/entities/tag.entity';
+import { CategoryEntity } from 'src/category/entities/category.entity';
 
 
 @Injectable()
@@ -13,11 +18,57 @@ export class PostService {
    constructor(
     @InjectRepository(PostEntity)
     private readonly PostRepository: Repository<PostEntity>,
+    private readonly usersService: UsersService,
+    private readonly categoriesService: CategoriesService,
+    private readonly tagsService: TagsService,
   ) {}
 
   async create(createPostDto: CreatePostDto,) {
+    const { categoryId, tagId, userId, ...rest } = createPostDto;
+    
     try {
-      const post = await this.PostRepository.save(createPostDto);
+      const user = await this.usersService.findOne(userId);
+      if(!user){
+        throw new ManagerError({
+          type: 'NOT_FOUND',
+          message: 'User not found!',
+        });
+      }
+      
+      const categoryDraff: CategoryEntity[] = []
+      for(let catgoryItem of categoryId){
+        const category = await this.categoriesService.findOne(catgoryItem);
+        if(!category?.data){
+          throw new ManagerError({
+            type: 'NOT_FOUND',
+            message: 'Category not found!',
+          });
+        }
+        categoryDraff.push(category.data)
+      }
+      
+      const tagsDraff: TagEntity[] = []
+
+      for(let tagItem of tagId){
+        const tag = await this.tagsService.findOne(tagItem);
+        if(!tag?.data){
+          throw new ManagerError({
+            type: 'NOT_FOUND',
+            message: 'tags not found!',
+          });
+        }
+
+        tagsDraff.push( tag.data )
+      }
+
+      
+      const post = await this.PostRepository.save({
+        ...rest,
+        user: user,
+        tags: tagsDraff,
+        categories: categoryDraff,
+      });
+
 
       if (!post) {
         throw new ManagerError({
@@ -28,6 +79,7 @@ export class PostService {
 
       return post;
     } catch (error) {
+      if(error instanceof ManagerError) throw error;
       ManagerError.createSignatureError(error.message);
     }
   }
@@ -40,13 +92,13 @@ export class PostService {
       const [total, data] = await Promise.all([
         this.PostRepository.count({ where: { isActive: true } }),
         this.PostRepository
-          .createQueryBuilder('post')
+          .createQueryBuilder('posts')
           .where({ isActive: true })
-          .leftJoinAndSelect('post.category', 'category')
-          .leftJoinAndSelect('post.tags', 'tags')
-          .leftJoinAndSelect('post.comment_id', 'comment')
-          .leftJoinAndSelect('post.like_id', 'like')
-          .leftJoinAndSelect('post.user', 'user')
+          .leftJoinAndSelect('posts.categories', 'categories')
+          .leftJoinAndSelect('posts.tags', 'tags')
+          .leftJoinAndSelect('posts.comments', 'comments')
+          .leftJoinAndSelect('posts.likes', 'likes')
+          .leftJoinAndSelect('posts.user', 'user')
           .take(limit)
           .skip(skip)
           .getMany(),
@@ -71,13 +123,13 @@ export class PostService {
   async findOne(id: string) {
     try {
       const post = await this.PostRepository
-        .createQueryBuilder('post')
+        .createQueryBuilder('posts')
         .where({ id, isActive: true })
-        .leftJoinAndSelect('post.category', 'category')
-        .leftJoinAndSelect('post.tags', 'tags')
-        .leftJoinAndSelect('post.comment_id', 'comment')
-        .leftJoinAndSelect('post.like_id', 'like')
-        .leftJoinAndSelect('post.user', 'user')
+        .leftJoinAndSelect('posts.categories', 'categories')
+        .leftJoinAndSelect('posts.tags', 'tags')
+        .leftJoinAndSelect('posts.comments', 'comments')
+        .leftJoinAndSelect('posts.likes', 'likes')
+        .leftJoinAndSelect('posts.user', 'user')
         .getOne();
       
       if (!post) {
